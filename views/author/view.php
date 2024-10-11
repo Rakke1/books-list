@@ -27,6 +27,22 @@ $this->params['breadcrumbs'][] = $this->title;
         </p>
     <?php endif; ?>
 
+    <?php if (Yii::$app->user->isGuest): ?>
+        <div class="subscribe-form">
+            <h3>Подпишитесь на новые книги автора</h3>
+            <?= Html::beginForm(['author/subscribe', 'author_id' => $model->id], 'post') ?>
+            <?= Html::input('email', 'email', '', ['class' => 'form-control', 'placeholder' => 'Введите ваш email', 'required' => true]) ?>
+            <?= Html::input('tel', 'phone', '+7', [
+                'class' => 'form-control',
+                'placeholder' => 'Введите ваш номер телефона',
+                'required' => false,
+                'id' => 'phone-input',
+            ]) ?>
+            <?= Html::submitButton('Подписаться', ['class' => 'btn btn-success']) ?>
+            <?= Html::endForm() ?>
+        </div>
+    <?php endif; ?>
+
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [

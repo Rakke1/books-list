@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\services\SubscriptionService;
 use Yii;
 use app\models\Author;
 use app\models\AuthorSearch;
@@ -102,6 +103,26 @@ class AuthorController extends Controller
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionSubscribe($author_id): Response
+    {
+        if (Yii::$app->user->isGuest) {
+            $email = Yii::$app->request->post('email');
+            $phone = Yii::$app->request->post('phone') || null;
+
+            try {
+                if (SubscriptionService::subscribeGuest($email, $phone, $author_id)) {
+                    Yii::$app->session->setFlash('success', 'Вы подписались на новые книги автора.');
+                }
+            } catch (\Exception $e) {
+                Yii::$app->session->setFlash('error', $e->getMessage());
+            }
+        } else {
+            Yii::$app->session->setFlash('error', 'Только гости могут подписываться на новые книги автора.');
+        }
+
+        return $this->redirect(['author/view', 'id' => $author_id]);
     }
 
     /**
