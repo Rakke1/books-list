@@ -56,7 +56,7 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      * @param string $username
      * @return static|null
      */
-    public static function findByUsername($username)
+    public static function findByUsername(string $username): null|static
     {
         foreach (self::$users as $user) {
             if (strcasecmp($user['username'], $username) === 0) {
