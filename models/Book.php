@@ -2,10 +2,12 @@
 
 namespace app\models;
 
+use app\services\SmsService;
 use \Yii;
 use yii\base\InvalidConfigException;
 use yii\db\ActiveRecord;
 use yii\db\Exception;
+use yii\db\Query;
 
 /**
  *
@@ -50,6 +52,9 @@ class Book extends ActiveRecord
         ];
     }
 
+    /**
+     * @throws \yii\base\Exception
+     */
     public function uploadCoverImage(): bool
     {
         if ($this->cover_image_file) {
@@ -108,6 +113,32 @@ class Book extends ActiveRecord
      */
     public function saveAuthors($authors): void
     {
+        $currentAuthors = (new Query())
+            ->select('author_id')
+            ->from('book_author')
+            ->where(['book_id' => $this->id])
+            ->column();
+        $newAuthors = array_filter((array)$authors);
+        $authorsToAdd = array_diff($newAuthors, $currentAuthors);
+        $authorsToRemove = array_diff($currentAuthors, $newAuthors);
+
+        if (!empty($authorsToRemove)) {
+            \Yii::$app->db->createCommand()->delete('book_author', [
+                'book_id' => $this->id,
+                'author_id' => $authorsToRemove,
+            ])->execute();
+        }
+
+        if (!empty($authorsToAdd)) {
+            foreach ($authorsToAdd as $authorId) {
+                /** @noinspection MissedFieldInspection */
+                \Yii::$app->db->createCommand()->insert('book_author', [
+                    'book_id' => $this->id,
+                    'author_id' => $authorId,
+                ])->execute();
+            }
+        }
+
         \Yii::$app->db->createCommand()->delete('book_author', ['book_id' => $this->id])->execute();
 
         if (is_array($authors)) {
@@ -117,6 +148,7 @@ class Book extends ActiveRecord
                     'book_id' => $this->id,
                     'author_id' => $authorId,
                 ])->execute();
+                SmsService::sendSmsToSubscribers($authorId, 'У нас новые книги от ваших любимых авторов!');
             }
         }
     }
