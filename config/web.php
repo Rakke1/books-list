@@ -42,14 +42,13 @@ $config = [
             ],
         ],
         'db' => $db,
-        /*
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                'report/top-authors' => 'report/top-authors',
             ],
         ],
-        */
     ],
     'params' => $params,
 ];
