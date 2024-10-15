@@ -3,8 +3,8 @@
 namespace app\models;
 
 use app\services\SmsService;
-use \Yii;
 use yii\base\InvalidConfigException;
+use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 use yii\db\Exception;
 use yii\db\Query;
@@ -12,11 +12,10 @@ use yii\db\Query;
 /**
  *
  * @property array $authorsList
- * @property \yii\db\ActiveQuery|array $authors
+ * @property ActiveQuery|array $authors
  */
 class Book extends ActiveRecord
 {
-    public $cover_image_file;
     public $authors;
 
     public static function tableName(): string
@@ -33,10 +32,6 @@ class Book extends ActiveRecord
             [['isbn'], 'string', 'max' => 13],
             [['cover_image'], 'string', 'max' => 255],
             [['isbn'], 'unique'],
-            [['cover_image_file'], 'file',
-//                'extensions' => 'jpg, jpeg, png',
-//                'maxSize' => 1024 * 1024 * 2
-            ],
         ];
     }
 
@@ -48,53 +43,41 @@ class Book extends ActiveRecord
             'published_year' => 'Год выпуска',
             'isbn' => 'ISBN',
             'cover_image' => 'Фото главной страницы',
-            'cover_image_file' => 'Загрузить фото',
+            'authors' => 'Авторы',
         ];
     }
 
-    /**
-     * @throws \yii\base\Exception
-     */
-    public function uploadCoverImage(): bool
+    public function getCoverImagePath()
     {
-        if ($this->cover_image_file) {
-            $fileName = Yii::$app->security->generateRandomString() . '.' . $this->cover_image_file->extension;
-            $filePath = Yii::getAlias('@webroot/uploads/') . $fileName;
+        if ($this->cover_image)
+            return $this->getCoverImage($this->cover_image);
+        return '';
+    }
 
-            if ($this->cover_image_file->saveAs($filePath)) {
-                if ($this->cover_image) {
-                    $oldFile = Yii::getAlias('@webroot/uploads/') . $this->cover_image;
-                    if (file_exists($oldFile)) {
-                        unlink($oldFile);
-                    }
-                }
-                $this->cover_image = $fileName;
-                return true;
-            }
-        }
-        $this->cover_image_file = null;
-
-        return false;
+    private function getCoverImage(string $filename): string
+    {
+        return '/uploads/books/'  . $filename;
     }
 
     public function beforeDelete(): bool
     {
         if (parent::beforeDelete()) {
-            if ($this->cover_image) {
-                $file = Yii::getAlias('@webroot/uploads/') . $this->cover_image;
-                if (file_exists($file)) {
-                    unlink($file);
-                }
-            }
+            $this->deleteImage();
             return true;
         }
         return false;
     }
 
+    public function deleteImage(): void
+    {
+        $form = new BookForm();
+        $form->deleteCurrentImage($this->cover_image);
+    }
+
     /**
      * @throws InvalidConfigException
      */
-    public function getAuthors(): \yii\db\ActiveQuery
+    public function getAuthors(): ActiveQuery
     {
         return $this->hasMany(Author::class, ['id' => 'author_id'])
             ->viaTable('book_author', ['book_id' => 'id']);

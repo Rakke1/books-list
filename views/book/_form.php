@@ -7,6 +7,7 @@ use kartik\select2\Select2;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Book */
+/* @var $modelForm app\models\BookForm */
 /* @var $form yii\widgets\ActiveForm */
 /* @var $authors \app\models\Author[]|array|\yii\db\ActiveRecord[] */
 ?>
@@ -23,11 +24,11 @@ use kartik\select2\Select2;
 
     <?= $form->field($model, 'description')->textarea(['rows' => 6]) ?>
 
-    <?= $form->field($model, 'cover_image_file')->widget(FileInput::class, [
+    <?= $form->field($modelForm, 'cover_image_file')->widget(FileInput::class, [
         'options' => ['accept' => 'image/*'],
         'pluginOptions' => [
             'initialPreview' => [
-                $model->cover_image ? Html::img("/uploads/{$model->cover_image}", ['style' => 'width:200px;']) : null,
+                $model->cover_image ? Html::img($model->getCoverImagePath(), ['style' => 'width:200px;']) : null,
             ],
             'overwriteInitial' => true,
             'showRemove' => false,

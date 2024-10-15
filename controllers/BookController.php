@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\BookSearch;
+use app\models\BookForm;
 use Yii;
 use app\models\Book;
 use app\models\Author;
@@ -50,15 +51,18 @@ class BookController extends Controller
 
     /**
      * @throws Exception
+     * @throws \yii\base\Exception
      */
     public function actionCreate(): Response|string
     {
         $model = new Book();
+        $modelForm = new BookForm();
         $authors = Author::find()->select(['fio', 'id'])->indexBy('id')->column();
 
         if ($model->load(Yii::$app->request->post())) {
-            $model->cover_image_file = UploadedFile::getInstance($model, 'cover_image_file');
-            $model->uploadCoverImage();
+            if ($cover_image_file = UploadedFile::getInstance($modelForm, 'cover_image_file')) {
+                $model->cover_image = $modelForm->uploadImage($cover_image_file);
+            }
 
             if ($model->save()) {
                 $model->saveAuthors(Yii::$app->request->post('Book')['authors']);
@@ -67,24 +71,26 @@ class BookController extends Controller
         }
         return $this->render('create', [
             'model' => $model,
+            'modelForm' => $modelForm,
             'authors' => $authors,
         ]);
     }
 
     /**
-     * @throws Exception
-     * @throws NotFoundHttpException|InvalidConfigException
+     * @throws NotFoundHttpException|InvalidConfigException|\yii\base\Exception
      */
     public function actionUpdate($id): Response|string
     {
+        $modelForm = new BookForm();
         $model = $this->findModel($id);
         $authors = Author::find()->select(['fio', 'id'])->indexBy('id')->column();
         $model->authors = $model->getAuthorsList();
 
         if ($model->load(Yii::$app->request->post())) {
-            $model->cover_image_file = UploadedFile::getInstance($model, 'cover_image_file');
-            if ($model->cover_image_file) {
-                $model->uploadCoverImage();
+            if ($modelForm->load(Yii::$app->request->post()) && $modelForm->validate()) {
+                if ($cover_image_file = UploadedFile::getInstance($modelForm, 'cover_image_file')) {
+                    $model->cover_image = $modelForm->uploadImage($cover_image_file, $model->cover_image);
+                }
             }
 
             if ($model->save()) {
@@ -95,6 +101,7 @@ class BookController extends Controller
 
         return $this->render('update', [
             'model' => $model,
+            'modelForm' => $modelForm,
             'authors' => $authors,
         ]);
     }

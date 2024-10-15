@@ -4,6 +4,7 @@ use yii\helpers\Html;
 
 /* @var $this yii\web\View */
 /* @var $model app\models\Book */
+/* @var $modelForm app\models\BookForm */
 /* @var $authors \app\models\Author[]|array|\yii\db\ActiveRecord[] */
 
 $this->title = 'Редактировать книгу: ' . $model->title;
@@ -17,6 +18,7 @@ $this->params['breadcrumbs'][] = 'Редактировать';
 
     <?= $this->render('_form', [
         'model' => $model,
+        'modelForm' => $modelForm,
         'authors' => $authors,
     ]) ?>
 

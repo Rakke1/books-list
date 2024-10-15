@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'cover_image',
                 'value' => function ($model) {
-                    return Html::img("/uploads/{$model->cover_image}", ['style' => 'width:200px;']);
+                    return Html::img($model->getCoverImagePath(), ['style' => 'width:200px;']);
                 },
                 'format' => 'html',
             ],
