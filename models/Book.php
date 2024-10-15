@@ -136,18 +136,6 @@ class Book extends ActiveRecord
                     'book_id' => $this->id,
                     'author_id' => $authorId,
                 ])->execute();
-            }
-        }
-
-        \Yii::$app->db->createCommand()->delete('book_author', ['book_id' => $this->id])->execute();
-
-        if (is_array($authors)) {
-            foreach ($authors as $authorId) {
-                /** @noinspection MissedFieldInspection */
-                \Yii::$app->db->createCommand()->insert('book_author', [
-                    'book_id' => $this->id,
-                    'author_id' => $authorId,
-                ])->execute();
                 SmsService::sendSmsToSubscribers($authorId, 'У нас новые книги от ваших любимых авторов!');
             }
         }
